@@ -1,38 +1,57 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import LoginPage from '../pages/LoginPage';
-import UserCredentials from '../helpers/UserCredentials';
 import ApplicationURL from '../helpers/ApplicationURL';
+import ProductsPage from '../pages/ProductsPage';
+import YourCartPage from '../pages/YourCartPage';
+import PageTitles from '../helpers/PageTitles';
+import CheckoutYourInformationPage from '../pages/CheckoutYourInformationPage';
+import CheckoutOverviewPage from '../pages/CheckoutOverviewPage';
+import CheckoutCompletePage from '../pages/CheckoutCompletePage';
 
-test('sanity test', async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  await loginPage.loginToApplication(UserCredentials.PERFORMANCE_GLITCH_USER, UserCredentials.CORRECT_PASSWORD);
-  await page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click();
-  
-  await page.locator('[data-test="add-to-cart-sauce-labs-bolt-t-shirt"]').click();
-  await page.locator('[data-test="add-to-cart-sauce-labs-onesie"]').click();
-  await page.locator('[data-test="title"]').click();
-  await page.locator('[data-test="shopping-cart-link"]').click();
-  await page.locator('[data-test="checkout"]').click();
-  await page.locator('[data-test="firstName"]').fill('dfd');
-  await page.locator('[data-test="lastName"]').fill('ddd');
-  await page.locator('[data-test="postalCode"]').fill('ddd');
-  await page.locator('[data-test="continue"]').click();
-  await page.locator('[data-test="finish"]').click();
-  await page.locator('[data-test="complete-header"]').click();
-  await page.locator('[data-test="back-to-products"]').click();
-  await page.locator('div').filter({ hasText: 'Swag Labs' }).nth(5).click();
-  await page.getByRole('button', { name: 'Open Menu' }).click();
-  await page.locator('[data-test="reset-sidebar-link"]').click();
-  await page.locator('[data-test="logout-sidebar-link"]').click();
-});
+test.describe('Sanity Tests Block', () => {
+    const products = ['Sauce Labs Backpack', 'Sauce Labs Fleece Jacket', 'Sauce Labs Onesie'];
 
-test('demo test', async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  await loginPage.loginToApplication(UserCredentials.PROBLEM_USER, UserCredentials.CORRECT_PASSWORD);
+    test('Validate doing simple transaction', async ({ page }) => {
 
-});
+        const loginPage = new LoginPage(page);
+        const productsPage = new ProductsPage(page);
+        const yourCartPage = new YourCartPage(page);
+        const checkOutYourInfoPage = new CheckoutYourInformationPage(page);
+        const checkoutOverviewPage = new CheckoutOverviewPage(page);
+        const checkoutCompletePage = new CheckoutCompletePage(page);
 
-test('demo test 2', async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  await loginPage.loginToApplication();
+        await loginPage.loginToApplication();
+
+        await productsPage.validatePageUrl(ApplicationURL.INVENTORY_PAGE_URL);
+        await productsPage.validateTitle('Products');
+
+        await productsPage.chooseProductByTitle(products[0]);
+        await productsPage.chooseProductByTitle(products[1]);
+        await productsPage.chooseProductByTitle(products[2]);
+
+        await productsPage.validateNumberOfItems(products.length.toString());
+        await productsPage.goToCart();
+
+        await yourCartPage.validatePageUrl(ApplicationURL.YOUR_CART_PAGE_URL);
+        await yourCartPage.validateTitle(PageTitles.YOUR_CART_PAGE);
+        await yourCartPage.validateNumberOfItems(products.length);
+
+        await yourCartPage.validateItemExistsinCart(products[0]);
+        await yourCartPage.validateItemExistsinCart(products[1]);
+        await yourCartPage.validateItemExistsinCart(products[2]);
+        await yourCartPage.goToCheckout();
+
+        await checkOutYourInfoPage.validatePageUrl(ApplicationURL.CHECKOUT_YOUR_INFO_PAGE_URL);
+        await checkOutYourInfoPage.validateTitle(PageTitles.CHECKOUT_YOUR_INFO_PAGE);
+        await checkOutYourInfoPage.fillInformation('Alex', 'Komanov', '20100');
+        await checkOutYourInfoPage.goTocheckoutOverview();
+
+        await checkoutOverviewPage.validatePageUrl(ApplicationURL.CHECKOUT_OVERVIEW_PAGE_URL);
+        await checkoutOverviewPage.validateTitle(PageTitles.CHECKOUT_OVERVIEW_PAGE);
+        await checkoutOverviewPage.clickFinishButton();
+
+        await checkoutCompletePage.validatePageUrl(ApplicationURL.CHECKOUT_COMPLETE_PAGE_URL);
+        await checkoutCompletePage.validateTitle(PageTitles.CHECKOUT_COMPLETE_PAGE);
+        await checkoutCompletePage.validateFinalMessage('Thank you for your order!');
+    });
 });
