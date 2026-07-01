@@ -25,7 +25,7 @@ jobs:
         PROBLEM_USER: ${{secrets.PROBLEM_USER}}
         PERFORMANCE_GLITCH_USER: ${{secrets.PERFORMANCE_GLITCH_USER}}
         CORRECT_PASSWORD: ${{secrets.CORRECT_PASSWORD}}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report
